@@ -23,6 +23,9 @@ eop_IAU1980 = get_iers_eop();
 # lightspeed
 c = 299792458 # m/s
 
+# ╔═╡ cedb1362-47a2-44ed-abd8-34b37c9d009e
+fLoRa = 435e6 # Hz, LoRa operated at 430-440 MHz in the LoRa moonbounce experiment
+
 # ╔═╡ 11e63381-a19c-4202-96bb-3588c9d8d3a5
 function moon_rv(date::DateTime)
 	# TODO: convert Moon coords to J2000
@@ -100,6 +103,8 @@ function moonbounce(earthlat, earthlng, earthaltkm,  moonlat, moonlng, moonaltkm
 
 	e2mMillis = find_zero(earthToMoonDelayMillis, assumedLightDelayMs)
 
+	# time of signal reflection by a reflector on the Moon
+	# and position and velocity of the reflector at that time
 	reflectionTime = transmittime + Dates.Millisecond(round(e2mMillis))
 	reflectPos, reflectVel = moonLLA_rv(moonlat, moonlng, moonaltkm, reflectionTime)
 
@@ -124,10 +129,43 @@ function moonbounce(earthlat, earthlng, earthaltkm,  moonlat, moonlng, moonaltkm
 end
 
 # ╔═╡ 59550d8b-13de-4d99-9164-b5b0a42fea7e
-t = DateTime(2022, 1, 22, 10, 24)
+t = DateTime(2021, 10, 24, 10, 24)
+
+# ╔═╡ e271d16d-d600-41c5-9d58-3b56d1683c04
+# approximate location of the Dwingeloo Radio Observatory
+dwingelooLLA = (52.8121050606517, 6.3971174915299684, 0) # 0 meters elevation
+
+# ╔═╡ f3651d01-81bf-4e3e-ab60-cd70541ce24d
+"""
+Calculates the Doppler effect frequency shift factor of a light wave transmitted from one point and received by another, both with instantaneous velocities.
+
+https://en.wikipedia.org/wiki/Doppler_effect#General
+"""
+function dopplerFactorBetween(a, b)
+	# vector between the two points
+	rAtoB = b.pos-a.pos
+	rHat = normalize(rAtoB)
+
+	# source velocity relative to the receiver
+	vS = dot(a.vel, rHat)
+
+	# receiver velocity, relative to source
+	vR = dot(b.vel, -rHat)  # -rHat because we want the direction from b to a
+
+	factor = (c+vR)/(c-vS)
+end
 
 # ╔═╡ 833c3151-9e37-4f72-9ffa-bf1958d9adc7
-moonbounce(44, -70+30*14, 0, 0,0,0, t)
+bounce = moonbounce(dwingelooLLA..., 0,0,0, t)
+
+# ╔═╡ 7059f0f2-c620-4353-a2c7-2070d90320fe
+dopplerFactorBetween(bounce.transmission, bounce.reflection)
+
+# ╔═╡ 494659ca-1258-4f04-a8b3-c7889610ab43
+dopplerFactorBetween(bounce.reflection, bounce.reception)
+
+# ╔═╡ 356a3352-4a77-41e2-9206-749ca8d40983
+shift = fLoRa * (dopplerFactorBetween(bounce.transmission, bounce.reflection) *dopplerFactorBetween(bounce.reflection, bounce.reception) - 1)
 
 # ╔═╡ 00000000-0000-0000-0000-000000000001
 PLUTO_PROJECT_TOML_CONTENTS = """
@@ -524,6 +562,7 @@ uuid = "3f19e933-33d8-53b3-aaab-bd5110c3b7a0"
 # ╠═7e991914-1050-4e85-b729-284f7f68e457
 # ╠═5c813a37-6916-4214-bb0a-380ca33a767f
 # ╠═a8e6acad-212e-4cbe-b2b9-03b7292636f0
+# ╠═cedb1362-47a2-44ed-abd8-34b37c9d009e
 # ╠═11e63381-a19c-4202-96bb-3588c9d8d3a5
 # ╠═9b2af5c2-42ea-4b4f-a2e7-9b67a98da790
 # ╠═b4fc572f-a9e8-4dac-b7b8-023a4229429d
@@ -531,6 +570,11 @@ uuid = "3f19e933-33d8-53b3-aaab-bd5110c3b7a0"
 # ╠═73702699-2464-4b22-abc9-422a2285bd4d
 # ╠═0e00242a-1023-480f-a187-c5e601712d59
 # ╠═59550d8b-13de-4d99-9164-b5b0a42fea7e
+# ╠═e271d16d-d600-41c5-9d58-3b56d1683c04
+# ╠═f3651d01-81bf-4e3e-ab60-cd70541ce24d
 # ╠═833c3151-9e37-4f72-9ffa-bf1958d9adc7
+# ╠═7059f0f2-c620-4353-a2c7-2070d90320fe
+# ╠═494659ca-1258-4f04-a8b3-c7889610ab43
+# ╠═356a3352-4a77-41e2-9206-749ca8d40983
 # ╟─00000000-0000-0000-0000-000000000001
 # ╟─00000000-0000-0000-0000-000000000002
