@@ -113,7 +113,14 @@ function moonbounce(earthlat, earthlng, earthaltkm,  moonlat, moonlng, moonaltkm
 
 	m2eMillis = find_zero(moonToEarthDelayMillis, assumedLightDelayMs)
 
-	e2mMillis, m2eMillis
+	# time of reception back on Earth,
+	# and the position and velocity of the receiver at that time
+	receptionTime = reflectionTime + Dates.Millisecond(round(m2eMillis))
+	receptionPos, receptionVel = earthLLA_rv(earthlat, earthlng, earthaltkm, receptionTime)
+
+	(transmission=(time=transmittime, pos=transmitPos, vel=transmitVel),
+	 reflection=(time=reflectionTime, pos=reflectPos,  vel=reflectVel),
+	 reception= (time=receptionTime,  pos=receptionPos,vel=receptionVel))
 end
 
 # ╔═╡ 59550d8b-13de-4d99-9164-b5b0a42fea7e
