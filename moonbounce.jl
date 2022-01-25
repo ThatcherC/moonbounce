@@ -253,7 +253,10 @@ let
 
 	scatter(dopplers, delays, 
 		alpha=strengths,     # first cut at Lambertian-type reflection strength TODO
-		label=false
+		label=false,
+		xlabel="Frequency shift (Hz)",
+		ylabel="Delay since start of transmission (s)",
+		title="Delay-Doppler"
 	)
 end
 
