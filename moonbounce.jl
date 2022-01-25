@@ -130,9 +130,6 @@ function moonbounce(earthlat, earthlng, earthaltkm,  moonlat, moonlng, moonaltkm
 	 reception= (time=receptionTime,  pos=receptionPos,vel=receptionVel))
 end
 
-# ╔═╡ 59550d8b-13de-4d99-9164-b5b0a42fea7e
-t = date_to_jd(DateTime(2021, 10, 24, 2, 57, 55))
-
 # ╔═╡ e271d16d-d600-41c5-9d58-3b56d1683c04
 # approximate location of the Dwingeloo Radio Observatory
 dwingelooLLA = (52.8121050606517, 6.3971174915299684, 0) # 0 meters elevation
@@ -157,21 +154,6 @@ function dopplerFactorBetween(a, b)
 
 	factor = (c+vR)/(c-vS)
 end
-
-# ╔═╡ 833c3151-9e37-4f72-9ffa-bf1958d9adc7
-bounce = moonbounce(dwingelooLLA..., 0,0,0, t)
-
-# ╔═╡ 7059f0f2-c620-4353-a2c7-2070d90320fe
-dopplerFactorBetween(bounce.transmission, bounce.reflection)
-
-# ╔═╡ 494659ca-1258-4f04-a8b3-c7889610ab43
-dopplerFactorBetween(bounce.reflection, bounce.reception)
-
-# ╔═╡ 356a3352-4a77-41e2-9206-749ca8d40983
-shift = fLoRa * (dopplerFactorBetween(bounce.transmission, bounce.reflection) *dopplerFactorBetween(bounce.reflection, bounce.reception) - 1)
-
-# ╔═╡ ce1238ea-0897-4d2b-902a-14da86387833
-delay = bounce.reception.time - bounce.transmission.time
 
 # ╔═╡ 5b4fd441-452e-4bf2-b606-b4724909cdd7
 md"
@@ -269,8 +251,8 @@ function dopplerDelayPlotAt(jd; plotargs...)
 end
 
 # ╔═╡ ece89996-7e66-4923-81d2-549bd332752e
-begin
-	transmitTimes = DateTime(2021, 10, 23, 16, 57, 55):Dates.Hour(1):DateTime(2021, 10, 24, 11, 57, 55)
+let
+	transmitTimes = (DateTime(2021, 10, 5, 16, 57, 55):Dates.Hour(1):DateTime(2021, 10, 6, 11, 57, 55)) .+ Dates.Hour(24)
 	
 	bouncePlots = dopplerDelayPlotAt.(date_to_jd.(transmitTimes), aspect_ratio=400, ylabel="Delay (s)", xrot=40)
 	
@@ -281,8 +263,23 @@ begin
 	plot(titleplot, p, layout=@layout([A{0.01h}; B]))
 end
 
-# ╔═╡ d9b49513-aade-4efe-a97f-1bcf639965e0
-titles
+# ╔═╡ 59550d8b-13de-4d99-9164-b5b0a42fea7e
+t = date_to_jd(DateTime(2021, 10, 5, 12, 24, 55))
+
+# ╔═╡ 833c3151-9e37-4f72-9ffa-bf1958d9adc7
+bounce = moonbounce(dwingelooLLA..., 0,0,0, t)
+
+# ╔═╡ 7059f0f2-c620-4353-a2c7-2070d90320fe
+dopplerFactorBetween(bounce.transmission, bounce.reflection)
+
+# ╔═╡ 494659ca-1258-4f04-a8b3-c7889610ab43
+dopplerFactorBetween(bounce.reflection, bounce.reception)
+
+# ╔═╡ 356a3352-4a77-41e2-9206-749ca8d40983
+shift = fLoRa * (dopplerFactorBetween(bounce.transmission, bounce.reflection) *dopplerFactorBetween(bounce.reflection, bounce.reception) - 1)
+
+# ╔═╡ ce1238ea-0897-4d2b-902a-14da86387833
+delay = bounce.reception.time - bounce.transmission.time
 
 # ╔═╡ fd28654f-18aa-4e27-a83d-91f2e6cd81c4
 dopplerDelayPlotAt(t)
@@ -1301,7 +1298,6 @@ version = "0.9.1+5"
 # ╠═57fc4f13-2218-43fe-8193-350f6b6db12e
 # ╠═73702699-2464-4b22-abc9-422a2285bd4d
 # ╠═0e00242a-1023-480f-a187-c5e601712d59
-# ╠═59550d8b-13de-4d99-9164-b5b0a42fea7e
 # ╠═e271d16d-d600-41c5-9d58-3b56d1683c04
 # ╠═f3651d01-81bf-4e3e-ab60-cd70541ce24d
 # ╠═833c3151-9e37-4f72-9ffa-bf1958d9adc7
@@ -1316,7 +1312,7 @@ version = "0.9.1+5"
 # ╠═e165d46b-af7f-47aa-8fcb-5999606bdb0f
 # ╠═21e56be6-dafc-46e6-9831-b258d2d7aedb
 # ╠═ece89996-7e66-4923-81d2-549bd332752e
-# ╠═d9b49513-aade-4efe-a97f-1bcf639965e0
+# ╠═59550d8b-13de-4d99-9164-b5b0a42fea7e
 # ╠═fd28654f-18aa-4e27-a83d-91f2e6cd81c4
 # ╟─00000000-0000-0000-0000-000000000001
 # ╟─00000000-0000-0000-0000-000000000002
