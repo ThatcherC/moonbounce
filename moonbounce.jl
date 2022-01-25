@@ -28,11 +28,11 @@ fLoRa = 435e6 # Hz, LoRa operated at 430-440 MHz in the LoRa moonbounce experime
 
 # ╔═╡ 11e63381-a19c-4202-96bb-3588c9d8d3a5
 function moon_rv(jd)
-	# TODO: convert Moon coords to J2000
-	R = I
-
-	jd2 = jd + 1/86400
+	R = r_eci_to_eci(MOD(), J2000(), jd)
 	
+	jd2 = jd + 1/86400
+
+	# TODO: convert JD_UTC to JD_TBD
 	pos = R*moon_position_i(jd)
 	pos2 = R*moon_position_i(jd2)
 
