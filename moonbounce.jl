@@ -156,7 +156,7 @@ function dopplerFactorBetween(a, b)
 end
 
 # ╔═╡ 833c3151-9e37-4f72-9ffa-bf1958d9adc7
-bounce = moonbounce(dwingelooLLA..., 0,0,0, t)
+bounce = moonbounce(dwingelooLLA..., 0,0,0, t+Dates.Hour(-8))
 
 # ╔═╡ 7059f0f2-c620-4353-a2c7-2070d90320fe
 dopplerFactorBetween(bounce.transmission, bounce.reflection)
