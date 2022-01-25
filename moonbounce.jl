@@ -16,6 +16,9 @@ using Roots
 # ╔═╡ 1bd4c734-e245-4027-ac70-2d8043922cbe
 using Plots
 
+# ╔═╡ bc1bc1e2-ca37-4901-bc6d-169c2effaadb
+using Plots.PlotMeasures
+
 # ╔═╡ 5c813a37-6916-4214-bb0a-380ca33a767f
 eop_IAU1980 = get_iers_eop();
 
@@ -179,7 +182,7 @@ I'd like to evenly cover the Moon with points that will act as reflector locatio
 "
 
 # ╔═╡ e019b7ef-3671-4c48-97a0-aed0c0857efc
-n = 1500
+n = 500
 
 # ╔═╡ c6af0b6f-955f-4ab3-a105-4996aa1a5383
 # generate some reflector latitudes and longitudes
@@ -248,17 +251,30 @@ function dopplerDelayPairsAt(jd)
 end
 
 # ╔═╡ 21e56be6-dafc-46e6-9831-b258d2d7aedb
-let
-	dopplers, delays, strengths = dopplerDelayPairsAt(t)
+function dopplerDelayPlotAt(jd; plotargs...)
+	dopplers, delays, strengths = dopplerDelayPairsAt(jd)
 
 	scatter(dopplers, delays, 
 		alpha=strengths,     # first cut at Lambertian-type reflection strength TODO
 		label=false,
 		xlabel="Frequency shift (Hz)",
 		ylabel="Delay since start of transmission (s)",
-		title="Delay-Doppler"
+		title="Delay-Doppler";
+		plotargs...
 	)
 end
+
+# ╔═╡ ece89996-7e66-4923-81d2-549bd332752e
+begin
+	bouncePlots = dopplerDelayPlotAt.(date_to_jd.(
+		DateTime(2021, 10, 23, 16, 57, 55):Dates.Hour(1):DateTime(2021, 10, 24, 11, 57, 55)
+	), aspect_ratio=400, title="", ylabel="Delay (s)", xrot=40)
+	
+	plot(bouncePlots..., layout=(5,4),size=(1200,800), bottom_margin=20px, left_margin=20px)
+end
+
+# ╔═╡ fd28654f-18aa-4e27-a83d-91f2e6cd81c4
+dopplerDelayPlotAt(t)
 
 # ╔═╡ 00000000-0000-0000-0000-000000000001
 PLUTO_PROJECT_TOML_CONTENTS = """
@@ -1264,6 +1280,7 @@ version = "0.9.1+5"
 # ╠═c3e74733-4f49-4849-8d64-5def3f5392e9
 # ╠═7e991914-1050-4e85-b729-284f7f68e457
 # ╠═1bd4c734-e245-4027-ac70-2d8043922cbe
+# ╠═bc1bc1e2-ca37-4901-bc6d-169c2effaadb
 # ╠═5c813a37-6916-4214-bb0a-380ca33a767f
 # ╠═a8e6acad-212e-4cbe-b2b9-03b7292636f0
 # ╠═cedb1362-47a2-44ed-abd8-34b37c9d009e
@@ -1287,5 +1304,7 @@ version = "0.9.1+5"
 # ╠═80c79503-c342-4f31-9356-bae9a29aaf4f
 # ╠═e165d46b-af7f-47aa-8fcb-5999606bdb0f
 # ╠═21e56be6-dafc-46e6-9831-b258d2d7aedb
+# ╠═ece89996-7e66-4923-81d2-549bd332752e
+# ╠═fd28654f-18aa-4e27-a83d-91f2e6cd81c4
 # ╟─00000000-0000-0000-0000-000000000001
 # ╟─00000000-0000-0000-0000-000000000002
