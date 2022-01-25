@@ -221,7 +221,7 @@ function dopplerDelayPairsAt(jd)
 	# generate a Doppler-delay pair a signal transmitted at time t bouncing of each
 	# reflector on the Moon
 	dopplerDelayPairs = map(refLats, refLngs) do moonLat, moonLng
-		bounce = moonbounce(dwingelooLLA..., moonLat,moonLng,0, t)
+		bounce = moonbounce(dwingelooLLA..., moonLat,moonLng,0, jd)
 	
 		# TODO filter out bounces that pass through Earth
 		moonPosAtReflection = moon_rv(bounce.reflection.time)[1]
