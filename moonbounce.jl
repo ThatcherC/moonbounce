@@ -216,41 +216,45 @@ function angleBetweend(a,b)
 end;
 
 # ╔═╡ e165d46b-af7f-47aa-8fcb-5999606bdb0f
-# generate a Doppler-delay pair a signal transmitted at time t bouncing of each
-# reflector on the Moon
-dopplerDelayPairs = map(refLats, refLngs) do moonLat, moonLng
-	bounce = moonbounce(dwingelooLLA..., moonLat,moonLng,0, t)
+function dopplerDelayPairsAt(jd)
 
-	# TODO filter out bounces that pass through Earth
-	moonPosAtReflection = moon_rv(bounce.reflection.time)[1]
-	reflectionEarthElevation = 90-angleBetweend(bounce.reflection.pos-moonPosAtReflection, bounce.transmission.pos-bounce.reflection.pos)
-
-	transmitterMoonElevation = 90-angleBetweend(bounce.reflection.pos-bounce.transmission.pos, bounce.transmission.pos)
-
-	if(reflectionEarthElevation > 5 && transmitterMoonElevation>5)
-		shift = fLoRa * (dopplerFactorBetween(bounce.transmission, bounce.reflection) *dopplerFactorBetween(bounce.reflection, bounce.reception) - 1)
+	# generate a Doppler-delay pair a signal transmitted at time t bouncing of each
+	# reflector on the Moon
+	dopplerDelayPairs = map(refLats, refLngs) do moonLat, moonLng
+		bounce = moonbounce(dwingelooLLA..., moonLat,moonLng,0, t)
 	
-		delay = (bounce.reception.time - bounce.transmission.time)*86400
-
-		shift, delay, sind(reflectionEarthElevation)
-	else
-		nothing, nothing, nothing
+		# TODO filter out bounces that pass through Earth
+		moonPosAtReflection = moon_rv(bounce.reflection.time)[1]
+		reflectionEarthElevation = 90-angleBetweend(bounce.reflection.pos-moonPosAtReflection, bounce.transmission.pos-bounce.reflection.pos)
+	
+		transmitterMoonElevation = 90-angleBetweend(bounce.reflection.pos-bounce.transmission.pos, bounce.transmission.pos)
+	
+		if(reflectionEarthElevation > 5 && transmitterMoonElevation>5)
+			shift = fLoRa * (dopplerFactorBetween(bounce.transmission, bounce.reflection) *dopplerFactorBetween(bounce.reflection, bounce.reception) - 1)
+		
+			delay = (bounce.reception.time - bounce.transmission.time)*86400
+	
+			shift, delay, sind(reflectionEarthElevation)
+		else
+			nothing, nothing, nothing
+		end
 	end
+	
+	dopplers = filter(x->!isnothing(x), map(x->x[1], dopplerDelayPairs));
+	delays = filter(x->!isnothing(x), map(x->x[2], dopplerDelayPairs));
+	strengths = filter(x->!isnothing(x), map(x->x[3], dopplerDelayPairs));
+
+	dopplers, delays, strengths
 end
 
-# ╔═╡ bffd29f7-68ab-429c-bda6-7baa3b46bd2d
-dopplers = filter(x->!isnothing(x), map(x->x[1], dopplerDelayPairs));
-
-# ╔═╡ a226a6de-d930-4afe-b196-2707fb18dd88
-delays = filter(x->!isnothing(x), map(x->x[2], dopplerDelayPairs));
-
-# ╔═╡ 4f276cc7-fdc3-4cc9-8002-176822363453
-strengths = filter(x->!isnothing(x), map(x->x[3], dopplerDelayPairs));
-
 # ╔═╡ 21e56be6-dafc-46e6-9831-b258d2d7aedb
-scatter(dopplers, delays, 
-	alpha=strengths        # first cut at Lambertian-type reflection strength TODO
-)
+let
+	dopplers, delays, strengths = dopplerDelayPairsAt(t)
+
+	scatter(dopplers, delays, 
+		alpha=strengths        # first cut at Lambertian-type reflection strength TODO
+	)
+end
 
 # ╔═╡ 00000000-0000-0000-0000-000000000001
 PLUTO_PROJECT_TOML_CONTENTS = """
@@ -1278,9 +1282,6 @@ version = "0.9.1+5"
 # ╠═c6af0b6f-955f-4ab3-a105-4996aa1a5383
 # ╠═80c79503-c342-4f31-9356-bae9a29aaf4f
 # ╠═e165d46b-af7f-47aa-8fcb-5999606bdb0f
-# ╠═bffd29f7-68ab-429c-bda6-7baa3b46bd2d
-# ╠═a226a6de-d930-4afe-b196-2707fb18dd88
-# ╠═4f276cc7-fdc3-4cc9-8002-176822363453
 # ╠═21e56be6-dafc-46e6-9831-b258d2d7aedb
 # ╟─00000000-0000-0000-0000-000000000001
 # ╟─00000000-0000-0000-0000-000000000002
