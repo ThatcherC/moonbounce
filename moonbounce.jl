@@ -137,6 +137,7 @@ dwingelooLLA = (52.8121050606517, 6.3971174915299684, 0) # 0 meters elevation
 
 # ╔═╡ f3651d01-81bf-4e3e-ab60-cd70541ce24d
 """
+    function dopplerFactorBetween(a, b)
 Calculates the Doppler effect frequency shift factor of a light wave transmitted from one point and received by another, both with instantaneous velocities.
 
 https://en.wikipedia.org/wiki/Doppler_effect#General
@@ -177,9 +178,6 @@ md"
 I'd like to evenly cover the Moon with points that will act as reflector locations. A great way to evenly distribute a number of points around a sphere is to use, of all things, the Fibonacci spiral. I'm following the procedure described by [extremelearning.com.au](http://extremelearning.com.au/how-to-evenly-distribute-points-on-a-sphere-more-effectively-than-the-canonical-fibonacci-lattice/)
 
 "
-
-# ╔═╡ a56e64a1-5fa9-495d-bc9c-ab1c26acfac9
-
 
 # ╔═╡ e019b7ef-3671-4c48-97a0-aed0c0857efc
 n = 500
