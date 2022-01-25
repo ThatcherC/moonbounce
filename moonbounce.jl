@@ -252,13 +252,13 @@ end
 
 # ╔═╡ ece89996-7e66-4923-81d2-549bd332752e
 let
-	transmitTimes = (DateTime(2021, 10, 5, 16, 57, 55):Dates.Hour(1):DateTime(2021, 10, 6, 11, 57, 55)) .+ Dates.Hour(24)
+	transmitTimes = (DateTime(2021, 10, 5, 3, 24, 55):Dates.Hour(1):DateTime(2021, 10, 5, 18, 24, 55))
 	
 	bouncePlots = dopplerDelayPlotAt.(date_to_jd.(transmitTimes), aspect_ratio=400, ylabel="Delay (s)", xrot=40)
 	
-	p = plot(bouncePlots..., layout=(5,4),size=(1400,1000), bottom_margin=20px, left_margin=20px)
+	p = plot(bouncePlots..., layout=(4,4),size=(1400,1000), bottom_margin=20px, left_margin=20px)
 
-	titleplot = plot(title="Moon Bounce Doppler Delay October 24, 2021", grid=false, showaxis=false, xaxis=nothing, yaxis=nothing, bottom_margin=-20Plots.px)
+	titleplot = plot(title="Moon Bounce Doppler Delay October 5, 2021", grid=false, showaxis=false, xaxis=nothing, yaxis=nothing, bottom_margin=-20Plots.px)
 	
 	plot(titleplot, p, layout=@layout([A{0.01h}; B]))
 end
