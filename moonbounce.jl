@@ -254,24 +254,35 @@ end
 function dopplerDelayPlotAt(jd; plotargs...)
 	dopplers, delays, strengths = dopplerDelayPairsAt(jd)
 
+	title = Dates.format(DateTime(jd_to_date(jd)[1:end-1]...), "u. dd HH:MM")
+	
 	scatter(dopplers, delays, 
 		alpha=strengths,     # first cut at Lambertian-type reflection strength TODO
 		label=false,
 		xlabel="Frequency shift (Hz)",
 		ylabel="Delay since start of transmission (s)",
-		title="Delay-Doppler";
+		markerstrokewidth=0,
+		guidefont = 8, tickfont = 8,
+		title = title;
 		plotargs...
 	)
 end
 
 # ╔═╡ ece89996-7e66-4923-81d2-549bd332752e
 begin
-	bouncePlots = dopplerDelayPlotAt.(date_to_jd.(
-		DateTime(2021, 10, 23, 16, 57, 55):Dates.Hour(1):DateTime(2021, 10, 24, 11, 57, 55)
-	), aspect_ratio=400, title="", ylabel="Delay (s)", xrot=40)
+	transmitTimes = DateTime(2021, 10, 23, 16, 57, 55):Dates.Hour(1):DateTime(2021, 10, 24, 11, 57, 55)
 	
-	plot(bouncePlots..., layout=(5,4),size=(1200,800), bottom_margin=20px, left_margin=20px)
+	bouncePlots = dopplerDelayPlotAt.(date_to_jd.(transmitTimes), aspect_ratio=400, ylabel="Delay (s)", xrot=40)
+	
+	p = plot(bouncePlots..., layout=(5,4),size=(1400,1000), bottom_margin=20px, left_margin=20px)
+
+	titleplot = plot(title="Moon Bounce Doppler Delay October 24, 2021", grid=false, showaxis=false, xaxis=nothing, yaxis=nothing, bottom_margin=-20Plots.px)
+	
+	plot(titleplot, p, layout=@layout([A{0.01h}; B]))
 end
+
+# ╔═╡ d9b49513-aade-4efe-a97f-1bcf639965e0
+titles
 
 # ╔═╡ fd28654f-18aa-4e27-a83d-91f2e6cd81c4
 dopplerDelayPlotAt(t)
@@ -1305,6 +1316,7 @@ version = "0.9.1+5"
 # ╠═e165d46b-af7f-47aa-8fcb-5999606bdb0f
 # ╠═21e56be6-dafc-46e6-9831-b258d2d7aedb
 # ╠═ece89996-7e66-4923-81d2-549bd332752e
+# ╠═d9b49513-aade-4efe-a97f-1bcf639965e0
 # ╠═fd28654f-18aa-4e27-a83d-91f2e6cd81c4
 # ╟─00000000-0000-0000-0000-000000000001
 # ╟─00000000-0000-0000-0000-000000000002
