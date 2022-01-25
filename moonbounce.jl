@@ -27,12 +27,11 @@ c = 299792458 # m/s
 fLoRa = 435e6 # Hz, LoRa operated at 430-440 MHz in the LoRa moonbounce experiment
 
 # ╔═╡ 11e63381-a19c-4202-96bb-3588c9d8d3a5
-function moon_rv(date::DateTime)
+function moon_rv(jd)
 	# TODO: convert Moon coords to J2000
 	R = I
 
-	jd = date_to_jd(date)
-	jd2 = date_to_jd(date+Dates.Second(1))
+	jd2 = jd + 1/86400
 	
 	pos = R*moon_position_i(jd)
 	pos2 = R*moon_position_i(jd2)
@@ -41,18 +40,18 @@ function moon_rv(date::DateTime)
 end
 
 # ╔═╡ 9b2af5c2-42ea-4b4f-a2e7-9b67a98da790
-function earthLLA_r(latdeg, lngdeg, altkm, date::DateTime)
+function earthLLA_r(latdeg, lngdeg, altkm, jd)
 
-	rITRFtoJ2K = r_ecef_to_eci(ITRF(), J2000(), date_to_jd(date), eop_IAU1980)
+	rITRFtoJ2K = r_ecef_to_eci(ITRF(), J2000(), jd, eop_IAU1980)
 	itrfPos = geodetic_to_ecef(deg2rad(latdeg), deg2rad(lngdeg), altkm*1000)
 
 	posJ2K = rITRFtoJ2K * itrfPos
 end
 
 # ╔═╡ b4fc572f-a9e8-4dac-b7b8-023a4229429d
-function earthLLA_rv(latdeg, lngdeg, altkm, date::DateTime)
-	pos1 = earthLLA_r(latdeg, lngdeg, altkm, date)
-	pos2 = earthLLA_r(latdeg, lngdeg, altkm, date+Dates.Second(1))
+function earthLLA_rv(latdeg, lngdeg, altkm, jd)
+	pos1 = earthLLA_r(latdeg, lngdeg, altkm, jd)
+	pos2 = earthLLA_r(latdeg, lngdeg, altkm, jd+1/86400)
 
 	pos1, pos2-pos1 # assumes dt is 1 second
 end
@@ -62,11 +61,11 @@ end
 
 Moon frame has x pointing from moon center to Earth, y pointing in negative moon velocity direction
 """
-function moonLLA_r(latdeg, lngdeg, altkm, date::DateTime)
+function moonLLA_r(latdeg, lngdeg, altkm, jd)
 	rMoon = 1738.1e3 # meters
 
 	# assumes moon rv is in J2000
-	moonpos, moonvel = moon_rv(date)
+	moonpos, moonvel = moon_rv(jd)
 
 	xhat = -normalize(moonpos)
 	zhat = normalize(cross(moonpos, moonvel))
@@ -81,55 +80,55 @@ function moonLLA_r(latdeg, lngdeg, altkm, date::DateTime)
 end
 
 # ╔═╡ 73702699-2464-4b22-abc9-422a2285bd4d
-function moonLLA_rv(latdeg, lngdeg, altkm, date::DateTime)
-	pos1 = moonLLA_r(latdeg, lngdeg, altkm, date)
-	pos2 = moonLLA_r(latdeg, lngdeg, altkm, date+Dates.Second(1))
+function moonLLA_rv(latdeg, lngdeg, altkm, jd)
+	pos1 = moonLLA_r(latdeg, lngdeg, altkm, jd)
+	pos2 = moonLLA_r(latdeg, lngdeg, altkm, jd+1/86400)
 
 	pos1, pos2-pos1
 end
 
 # ╔═╡ 0e00242a-1023-480f-a187-c5e601712d59
-function moonbounce(earthlat, earthlng, earthaltkm,  moonlat, moonlng, moonaltkm,  transmittime::DateTime; assumedLightDelayMs = 1000)
+function moonbounce(earthlat, earthlng, earthaltkm,  moonlat, moonlng, moonaltkm,  transmitjd; assumedLightDelaySeconds = 1.0)
 
-	transmitPos, transmitVel = earthLLA_rv(earthlat, earthlng, earthaltkm, transmittime)
+	transmitPos, transmitVel = earthLLA_rv(earthlat, earthlng, earthaltkm, transmitjd)
 	
-	function earthToMoonDelayMillis(delaymillis)
-		moonPos, moonVel = moonLLA_rv(moonlat, moonlng, moonaltkm, transmittime + Dates.Millisecond(round(delaymillis)))
+	function earthToMoonDelay(delaySeconds)
+		moonPos, moonVel = moonLLA_rv(moonlat, moonlng, moonaltkm, transmitjd + delaySeconds/86400)
 
 		dist = norm(moonPos - transmitPos)
 
-		dist/c*1000 - delaymillis
+		dist/c - delaySeconds
 	end
 
-	e2mMillis = find_zero(earthToMoonDelayMillis, assumedLightDelayMs)
+	e2mSeconds = find_zero(earthToMoonDelay, assumedLightDelaySeconds)
 
 	# time of signal reflection by a reflector on the Moon
 	# and position and velocity of the reflector at that time
-	reflectionTime = transmittime + Dates.Millisecond(round(e2mMillis))
+	reflectionTime = transmitjd + e2mSeconds/86400
 	reflectPos, reflectVel = moonLLA_rv(moonlat, moonlng, moonaltkm, reflectionTime)
 
-	function moonToEarthDelayMillis(delaymillis)
-		earthPos, earthVel = earthLLA_rv(earthlat, earthlng, earthaltkm, reflectionTime + Dates.Millisecond(round(delaymillis)))
+	function moonToEarthDelay(delaySeconds)
+		earthPos, earthVel = earthLLA_rv(earthlat, earthlng, earthaltkm, reflectionTime + delaySeconds/86400)
 
 		dist = norm(earthPos - reflectPos)
 
-		dist/c*1000 - delaymillis
+		dist/c - delaySeconds
 	end
 
-	m2eMillis = find_zero(moonToEarthDelayMillis, assumedLightDelayMs)
+	m2eSeconds = find_zero(moonToEarthDelay, assumedLightDelaySeconds)
 
 	# time of reception back on Earth,
 	# and the position and velocity of the receiver at that time
-	receptionTime = reflectionTime + Dates.Millisecond(round(m2eMillis))
+	receptionTime = reflectionTime + m2eSeconds/86400
 	receptionPos, receptionVel = earthLLA_rv(earthlat, earthlng, earthaltkm, receptionTime)
 
-	(transmission=(time=transmittime, pos=transmitPos, vel=transmitVel),
+	(transmission=(time=transmitjd, pos=transmitPos, vel=transmitVel),
 	 reflection=(time=reflectionTime, pos=reflectPos,  vel=reflectVel),
 	 reception= (time=receptionTime,  pos=receptionPos,vel=receptionVel))
 end
 
 # ╔═╡ 59550d8b-13de-4d99-9164-b5b0a42fea7e
-t = DateTime(2021, 10, 24, 2, 57, 55)
+t = date_to_jd(DateTime(2021, 10, 24, 2, 57, 55))
 
 # ╔═╡ e271d16d-d600-41c5-9d58-3b56d1683c04
 # approximate location of the Dwingeloo Radio Observatory
@@ -229,22 +228,27 @@ dopplerDelayPairs = map(refLats, refLngs) do moonLat, moonLng
 	if(reflectionMoonElevation > 0)
 		shift = fLoRa * (dopplerFactorBetween(bounce.transmission, bounce.reflection) *dopplerFactorBetween(bounce.reflection, bounce.reception) - 1)
 	
-		delay = Dates.Millisecond(bounce.reception.time - bounce.transmission.time).value/1000
-	
-		shift, delay
+		delay = (bounce.reception.time - bounce.transmission.time)*86400
+
+		shift, delay, sind(reflectionMoonElevation)
 	else
-		nothing, nothing
+		nothing, nothing, nothing
 	end
 end
 
 # ╔═╡ bffd29f7-68ab-429c-bda6-7baa3b46bd2d
-dopplers = filter(x->!isnothing(x), map(first, dopplerDelayPairs))
+dopplers = filter(x->!isnothing(x), map(x->x[1], dopplerDelayPairs));
 
 # ╔═╡ a226a6de-d930-4afe-b196-2707fb18dd88
-delays = filter(x->!isnothing(x), map(last, dopplerDelayPairs))
+delays = filter(x->!isnothing(x), map(x->x[2], dopplerDelayPairs));
+
+# ╔═╡ 4f276cc7-fdc3-4cc9-8002-176822363453
+strengths = filter(x->!isnothing(x), map(x->x[3], dopplerDelayPairs));
 
 # ╔═╡ 21e56be6-dafc-46e6-9831-b258d2d7aedb
-scatter(dopplers, delays)
+scatter(dopplers, delays, 
+	alpha=strengths        # first cut at Lambertian-type reflection strength TODO
+)
 
 # ╔═╡ 00000000-0000-0000-0000-000000000001
 PLUTO_PROJECT_TOML_CONTENTS = """
@@ -1267,16 +1271,14 @@ version = "0.9.1+5"
 # ╠═494659ca-1258-4f04-a8b3-c7889610ab43
 # ╠═356a3352-4a77-41e2-9206-749ca8d40983
 # ╠═ce1238ea-0897-4d2b-902a-14da86387833
-# ╠═5b4fd441-452e-4bf2-b606-b4724909cdd7
-# ╠═a56e64a1-5fa9-495d-bc9c-ab1c26acfac9
+# ╟─5b4fd441-452e-4bf2-b606-b4724909cdd7
 # ╠═e019b7ef-3671-4c48-97a0-aed0c0857efc
 # ╠═c6af0b6f-955f-4ab3-a105-4996aa1a5383
 # ╠═80c79503-c342-4f31-9356-bae9a29aaf4f
-# ╠═492b4c08-010f-4c50-bfc2-5a82c87bdf91
-# ╠═ac9469a8-e6c9-4b2f-95ae-45e08d100026
 # ╠═e165d46b-af7f-47aa-8fcb-5999606bdb0f
 # ╠═bffd29f7-68ab-429c-bda6-7baa3b46bd2d
 # ╠═a226a6de-d930-4afe-b196-2707fb18dd88
+# ╠═4f276cc7-fdc3-4cc9-8002-176822363453
 # ╠═21e56be6-dafc-46e6-9831-b258d2d7aedb
 # ╟─00000000-0000-0000-0000-000000000001
 # ╟─00000000-0000-0000-0000-000000000002
