@@ -232,7 +232,7 @@ function dopplerDelayPairsAt(jd)
 	
 		transmitterMoonElevation = 90-angleBetweend(bounce.reflection.pos-bounce.transmission.pos, bounce.transmission.pos)
 	
-		if(reflectionEarthElevation > 5 && transmitterMoonElevation>5)
+		if(reflectionEarthElevation > 5 && transmitterMoonElevation>10)
 			shift = fLoRa * (dopplerFactorBetween(bounce.transmission, bounce.reflection) *dopplerFactorBetween(bounce.reflection, bounce.reception) - 1)
 		
 			delay = (bounce.reception.time - bounce.transmission.time)*86400
