@@ -252,7 +252,8 @@ let
 	dopplers, delays, strengths = dopplerDelayPairsAt(t)
 
 	scatter(dopplers, delays, 
-		alpha=strengths        # first cut at Lambertian-type reflection strength TODO
+		alpha=strengths,     # first cut at Lambertian-type reflection strength TODO
+		label=false
 	)
 end
 
