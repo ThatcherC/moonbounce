@@ -179,7 +179,7 @@ I'd like to evenly cover the Moon with points that will act as reflector locatio
 "
 
 # ╔═╡ e019b7ef-3671-4c48-97a0-aed0c0857efc
-n = 500
+n = 1500
 
 # ╔═╡ c6af0b6f-955f-4ab3-a105-4996aa1a5383
 # generate some reflector latitudes and longitudes
