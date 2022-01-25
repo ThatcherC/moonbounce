@@ -129,7 +129,7 @@ function moonbounce(earthlat, earthlng, earthaltkm,  moonlat, moonlng, moonaltkm
 end
 
 # ╔═╡ 59550d8b-13de-4d99-9164-b5b0a42fea7e
-t = DateTime(2021, 10, 24, 10, 24)
+t = DateTime(2021, 10, 24, 2, 57, 55)
 
 # ╔═╡ e271d16d-d600-41c5-9d58-3b56d1683c04
 # approximate location of the Dwingeloo Radio Observatory
@@ -156,7 +156,7 @@ function dopplerFactorBetween(a, b)
 end
 
 # ╔═╡ 833c3151-9e37-4f72-9ffa-bf1958d9adc7
-bounce = moonbounce(dwingelooLLA..., 0,0,0, t+Dates.Hour(-8))
+bounce = moonbounce(dwingelooLLA..., 0,0,0, t)
 
 # ╔═╡ 7059f0f2-c620-4353-a2c7-2070d90320fe
 dopplerFactorBetween(bounce.transmission, bounce.reflection)
@@ -197,24 +197,32 @@ refLats, refLngs = let
 end
 
 # ╔═╡ 80c79503-c342-4f31-9356-bae9a29aaf4f
-# angle between two (unnormalized) vectors in degrees
+"""
+    angleBetweend(a,b)
+Angle between two (unnormalized) vectors in degrees
+
+Examples:
+```jldoctest
+julia> using LinearAlgebra
+
+julia> angleBetweend([1,0,0], [0,1,0])
+90.0
+
+julia> angleBetweend([1,0,0], [1,1,0])
+45.0
+```
+"""
 function angleBetweend(a,b)
 	na = normalize(a)
 	nb = normalize(b)
 	atand(norm(cross(na, nb)), dot(na,nb))
-end
-
-# ╔═╡ 492b4c08-010f-4c50-bfc2-5a82c87bdf91
-angleBetweend([1,0,0], [0,1,0])
-
-# ╔═╡ ac9469a8-e6c9-4b2f-95ae-45e08d100026
-angleBetweend([1,0,0], [1,1,0])
+end;
 
 # ╔═╡ e165d46b-af7f-47aa-8fcb-5999606bdb0f
 # generate a Doppler-delay pair a signal transmitted at time t bouncing of each
 # reflector on the Moon
 dopplerDelayPairs = map(refLats, refLngs) do moonLat, moonLng
-	bounce = moonbounce(dwingelooLLA..., moonLat,moonLng,0, t+Dates.Hour(8))
+	bounce = moonbounce(dwingelooLLA..., moonLat,moonLng,0, t)
 
 	# TODO filter out bounces that pass through Earth
 	moonPosAtReflection = moon_rv(bounce.reflection.time)[1]
