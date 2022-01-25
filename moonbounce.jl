@@ -225,7 +225,7 @@ dopplerDelayPairs = map(refLats, refLngs) do moonLat, moonLng
 	moonPosAtReflection = moon_rv(bounce.reflection.time)[1]
 	reflectionMoonElevation = 90-angleBetweend(bounce.reflection.pos-moonPosAtReflection, bounce.transmission.pos-bounce.reflection.pos)
 
-	if(reflectionMoonElevation > 0)
+	if(reflectionMoonElevation > 5)
 		shift = fLoRa * (dopplerFactorBetween(bounce.transmission, bounce.reflection) *dopplerFactorBetween(bounce.reflection, bounce.reception) - 1)
 	
 		delay = (bounce.reception.time - bounce.transmission.time)*86400
