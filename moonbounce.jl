@@ -223,14 +223,16 @@ dopplerDelayPairs = map(refLats, refLngs) do moonLat, moonLng
 
 	# TODO filter out bounces that pass through Earth
 	moonPosAtReflection = moon_rv(bounce.reflection.time)[1]
-	reflectionMoonElevation = 90-angleBetweend(bounce.reflection.pos-moonPosAtReflection, bounce.transmission.pos-bounce.reflection.pos)
+	reflectionEarthElevation = 90-angleBetweend(bounce.reflection.pos-moonPosAtReflection, bounce.transmission.pos-bounce.reflection.pos)
 
-	if(reflectionMoonElevation > 5)
+	transmitterMoonElevation = 90-angleBetweend(bounce.reflection.pos-bounce.transmission.pos, bounce.transmission.pos)
+
+	if(reflectionEarthElevation > 5 && transmitterMoonElevation>5)
 		shift = fLoRa * (dopplerFactorBetween(bounce.transmission, bounce.reflection) *dopplerFactorBetween(bounce.reflection, bounce.reception) - 1)
 	
 		delay = (bounce.reception.time - bounce.transmission.time)*86400
 
-		shift, delay, sind(reflectionMoonElevation)
+		shift, delay, sind(reflectionEarthElevation)
 	else
 		nothing, nothing, nothing
 	end
