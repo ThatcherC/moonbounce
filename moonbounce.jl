@@ -196,26 +196,46 @@ refLats, refLngs = let
 	colat, lng
 end
 
+# ╔═╡ 80c79503-c342-4f31-9356-bae9a29aaf4f
+# angle between two (unnormalized) vectors in degrees
+function angleBetweend(a,b)
+	na = normalize(a)
+	nb = normalize(b)
+	atand(norm(cross(na, nb)), dot(na,nb))
+end
+
+# ╔═╡ 492b4c08-010f-4c50-bfc2-5a82c87bdf91
+angleBetweend([1,0,0], [0,1,0])
+
+# ╔═╡ ac9469a8-e6c9-4b2f-95ae-45e08d100026
+angleBetweend([1,0,0], [1,1,0])
+
 # ╔═╡ e165d46b-af7f-47aa-8fcb-5999606bdb0f
 # generate a Doppler-delay pair a signal transmitted at time t bouncing of each
 # reflector on the Moon
 dopplerDelayPairs = map(refLats, refLngs) do moonLat, moonLng
 	bounce = moonbounce(dwingelooLLA..., moonLat,moonLng,0, t+Dates.Hour(8))
 
-	# TODO filter out bounces that pass through Earth or Moon
+	# TODO filter out bounces that pass through Earth
+	moonPosAtReflection = moon_rv(bounce.reflection.time)[1]
+	reflectionMoonElevation = 90-angleBetweend(bounce.reflection.pos-moonPosAtReflection, bounce.transmission.pos-bounce.reflection.pos)
+
+	if(reflectionMoonElevation > 0)
+		shift = fLoRa * (dopplerFactorBetween(bounce.transmission, bounce.reflection) *dopplerFactorBetween(bounce.reflection, bounce.reception) - 1)
 	
-	shift = fLoRa * (dopplerFactorBetween(bounce.transmission, bounce.reflection) *dopplerFactorBetween(bounce.reflection, bounce.reception) - 1)
-
-	delay = Dates.Millisecond(bounce.reception.time - bounce.transmission.time).value/1000
-
-	shift, delay
+		delay = Dates.Millisecond(bounce.reception.time - bounce.transmission.time).value/1000
+	
+		shift, delay
+	else
+		nothing, nothing
+	end
 end
 
 # ╔═╡ bffd29f7-68ab-429c-bda6-7baa3b46bd2d
-dopplers = map(first, dopplerDelayPairs)
+dopplers = filter(x->!isnothing(x), map(first, dopplerDelayPairs))
 
 # ╔═╡ a226a6de-d930-4afe-b196-2707fb18dd88
-delays = map(last, dopplerDelayPairs)
+delays = filter(x->!isnothing(x), map(last, dopplerDelayPairs))
 
 # ╔═╡ 21e56be6-dafc-46e6-9831-b258d2d7aedb
 scatter(dopplers, delays)
@@ -1245,6 +1265,9 @@ version = "0.9.1+5"
 # ╠═a56e64a1-5fa9-495d-bc9c-ab1c26acfac9
 # ╠═e019b7ef-3671-4c48-97a0-aed0c0857efc
 # ╠═c6af0b6f-955f-4ab3-a105-4996aa1a5383
+# ╠═80c79503-c342-4f31-9356-bae9a29aaf4f
+# ╠═492b4c08-010f-4c50-bfc2-5a82c87bdf91
+# ╠═ac9469a8-e6c9-4b2f-95ae-45e08d100026
 # ╠═e165d46b-af7f-47aa-8fcb-5999606bdb0f
 # ╠═bffd29f7-68ab-429c-bda6-7baa3b46bd2d
 # ╠═a226a6de-d930-4afe-b196-2707fb18dd88
