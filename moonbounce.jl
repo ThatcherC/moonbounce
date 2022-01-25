@@ -167,6 +167,9 @@ dopplerFactorBetween(bounce.reflection, bounce.reception)
 # ╔═╡ 356a3352-4a77-41e2-9206-749ca8d40983
 shift = fLoRa * (dopplerFactorBetween(bounce.transmission, bounce.reflection) *dopplerFactorBetween(bounce.reflection, bounce.reception) - 1)
 
+# ╔═╡ ce1238ea-0897-4d2b-902a-14da86387833
+delay = bounce.reception.time - bounce.transmission.time
+
 # ╔═╡ 00000000-0000-0000-0000-000000000001
 PLUTO_PROJECT_TOML_CONTENTS = """
 [deps]
@@ -576,5 +579,6 @@ uuid = "3f19e933-33d8-53b3-aaab-bd5110c3b7a0"
 # ╠═7059f0f2-c620-4353-a2c7-2070d90320fe
 # ╠═494659ca-1258-4f04-a8b3-c7889610ab43
 # ╠═356a3352-4a77-41e2-9206-749ca8d40983
+# ╠═ce1238ea-0897-4d2b-902a-14da86387833
 # ╟─00000000-0000-0000-0000-000000000001
 # ╟─00000000-0000-0000-0000-000000000002
