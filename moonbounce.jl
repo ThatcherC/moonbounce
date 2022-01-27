@@ -140,13 +140,27 @@ end
 md"""
 ## The Main Event: `moonbounce(...)`
 
+With all the position and velocity functions defined, `moonbounce` is able to actually calculate the times of reflection on the Moon and reception back on Earth. The arguments to `moonbounce` are:
+- an Earth lat/lng/alt location
+- a Moon lat/lng/alt location (relative to my Moon frame defined above)
+- a transmission time (as a Julian date)
+
+The functions above make it easy to calculate the positions of (and thus distances and light delays between) points on the Earth and Moon, but we have to be careful because both the Earth and Moon are in motion.
+
+If an Earth point and Moon point are 1.2 light seconds away at a transmission time $t$, it's not correct to say the signal reaches the Moon at $t + (1.2 \text{s})$. Instead, we need to account for the amount that the Moon has moved during the propagation time of the signal! If the Moon is moving slightly away from the transmitter, the arrival time will be something more like $t + (1.20001 \text{s})$. Or if it's moving toward the Earth a bit, the arrival time could be something like $t + (1.19999 \text{s})$. The functions `earthToMoonDelay` and `moonToEarthDelay` below are passed to a quick zero-finding solver to account for this effect.
 """
 
 # ╔═╡ 0e00242a-1023-480f-a187-c5e601712d59
 function moonbounce(earthlat, earthlng, earthaltkm,  moonlat, moonlng, moonaltkm,  transmitjd; assumedLightDelaySeconds = 1.0)
 
+	# Cartesian position and velocity of the transmit site at transmission time
 	transmitPos, transmitVel = earthLLA_rv(earthlat, earthlng, earthaltkm, transmitjd)
-	
+
+	# calculates the difference between a guess `delaySeconds` and the actual light
+	# delay between the transmission site at transmission time and the reflection
+	# site `delaySeconds` into the future. Returns zero when `delaySeconds` matches
+	# the signal delay between transmission at the transmission site and a 
+	# reflection at the reflection site `delaySeconds` later
 	function earthToMoonDelay(delaySeconds)
 		moonPos, moonVel = moonLLA_rv(moonlat, moonlng, moonaltkm, transmitjd + delaySeconds/86400)
 
@@ -155,6 +169,7 @@ function moonbounce(earthlat, earthlng, earthaltkm,  moonlat, moonlng, moonaltkm
 		dist/c - delaySeconds
 	end
 
+	# Earth to Moon reflector light delay in seconds
 	e2mSeconds = find_zero(earthToMoonDelay, assumedLightDelaySeconds)
 
 	# time of signal reflection by a reflector on the Moon
@@ -162,6 +177,7 @@ function moonbounce(earthlat, earthlng, earthaltkm,  moonlat, moonlng, moonaltkm
 	reflectionTime = transmitjd + e2mSeconds/86400
 	reflectPos, reflectVel = moonLLA_rv(moonlat, moonlng, moonaltkm, reflectionTime)
 
+	# like `earthToMoonDelay` above but for the Moon->Earth direction
 	function moonToEarthDelay(delaySeconds)
 		earthPos, earthVel = earthLLA_rv(earthlat, earthlng, earthaltkm, reflectionTime + delaySeconds/86400)
 
@@ -170,6 +186,7 @@ function moonbounce(earthlat, earthlng, earthaltkm,  moonlat, moonlng, moonaltkm
 		dist/c - delaySeconds
 	end
 
+	# Moon to Earth receiver light delay in seconds
 	m2eSeconds = find_zero(moonToEarthDelay, assumedLightDelaySeconds)
 
 	# time of reception back on Earth,
@@ -261,8 +278,8 @@ end;
 # ╔═╡ e165d46b-af7f-47aa-8fcb-5999606bdb0f
 function dopplerDelayPairsAt(jd)
 
-	# generate a Doppler-delay pair a signal transmitted at time t bouncing of each
-	# reflector on the Moon
+	# generate a Doppler-delay pair a signal transmitted at time t bouncing off each
+	# of the reflectors on the Moon (defined above)
 	dopplerDelayPairs = map(refLats, refLngs) do moonLat, moonLng
 		bounce = moonbounce(dwingelooLLA..., moonLat,moonLng,0, jd)
 	
@@ -299,6 +316,7 @@ function dopplerDelayPairsAt(jd)
 end
 
 # ╔═╡ 21e56be6-dafc-46e6-9831-b258d2d7aedb
+# generate a delay-Doppler plot for a transmission at the given Julian date `jd`
 function dopplerDelayPlotAt(jd; plotargs...)
 	dopplers, delays, strengths = dopplerDelayPairsAt(jd)
 	
@@ -375,7 +393,7 @@ dopplerDelayPlotAt(t)
 # ╠═11e63381-a19c-4202-96bb-3588c9d8d3a5
 # ╠═57fc4f13-2218-43fe-8193-350f6b6db12e
 # ╠═73702699-2464-4b22-abc9-422a2285bd4d
-# ╠═461c3f7b-c2a0-4ae2-849b-026978f4dfe3
+# ╟─461c3f7b-c2a0-4ae2-849b-026978f4dfe3
 # ╠═0e00242a-1023-480f-a187-c5e601712d59
 # ╠═f3651d01-81bf-4e3e-ab60-cd70541ce24d
 # ╠═833c3151-9e37-4f72-9ffa-bf1958d9adc7
