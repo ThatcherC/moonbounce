@@ -1,6 +1,6 @@
 # Moon Bounce
 
-A Julia program and Pluto.jl notebook to recreate a version of this really cool delay-Doppler plot from a neat [radio experiment](https://lacuna.space/lora-moon-bounce/):
+A Julia program and Pluto.jl notebook to recreate a version of this really cool delay-Doppler plot from a neat [Moon bounce radio experiment](https://lacuna.space/lora-moon-bounce/):
 
 <table>
 	<tr><td><center><b>Real Experiment</b></center></td><td><center><b>My Simulation</b></center></td></tr>
