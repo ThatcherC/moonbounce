@@ -1,6 +1,6 @@
 # Moon Bounce
 
-A Julia program and Pluto.jl notebook to recreate a version of this really cool delay-Doppler plot:
+A Julia program and Pluto.jl notebook to recreate a version of this really cool delay-Doppler plot from a neat [radio experiment](https://lacuna.space/lora-moon-bounce/):
 
 <table>
 	<tr><td><center><b>Real Experiment</b></center></td><td><center><b>My Simulation</b></center></td></tr>
@@ -15,6 +15,20 @@ A Julia program and Pluto.jl notebook to recreate a version of this really cool 
 </table>
 
 More detail in my [blog post](https://jthatch.com/notes/Physics/RecreatingaMoonBounceDelayDopplerPlot.html)
+
+## Usage
+`moonbounce.jl` is a [Pluto.jl](https://github.com/fonsp/Pluto.jl) notebook, so it's best viewed in the Pluto.jl viewer.
+
+However you can also just run the program directly with
+```
+$ # instantiate Julia modules
+$ julia
+julia > ]
+(@v1.7) pkg> instantiate
+(@v1.7) pkg> ^D
+$ julia --project=. moonbounce.jl
+```
+but depending on your setup you might not see any images. 
 
 ## Quick Description
 At a high level, this program follows this procedure to make Moon bounce delay-Doppler plots:
