@@ -301,9 +301,6 @@ end
 # ╔═╡ 21e56be6-dafc-46e6-9831-b258d2d7aedb
 function dopplerDelayPlotAt(jd; plotargs...)
 	dopplers, delays, strengths = dopplerDelayPairsAt(jd)
-
-	logs = log.(strengths)
-	alphas = (logs .- minimum(logs,init=1)) ./ (maximum(logs,init=1)-minimum(logs,init=1))
 	
 	title = Dates.format(DateTime(jd_to_date(jd)[1:end-1]...), "u. dd HH:MM")
 	
